@@ -1,9 +1,55 @@
 {
-  "mcp": {
-    "blender": {
-      "command": "node",
-      "args": ["C:\\Users\\ESPE-SD\\mcp-blender\\server.mjs"],
-      "type": "local"
+  "description": "MCP Blender Configuration - Portable template for Windows",
+  "mcp_server": {
+    "host": "localhost",
+    "port": 9876
+  },
+  "blender_addon": {
+    "host": "localhost",
+    "port": 9876,
+    "enable_polyhaven": true,
+    "enable_sketchfab": true,
+    "enable_hyper3d": true,
+    "enable_hunyuan3d": true
+  },
+  "services": {
+    "polyhaven": {
+      "enabled": true,
+      "description": "Asset library from Poly Haven"
+    },
+    "sketchfab": {
+      "enabled": true,
+      "description": "3D model repository",
+      "api_key_env": "BLENDERMCP_SKETCHFAB_API_KEY"
+    },
+    "hyper3d": {
+      "enabled": true,
+      "description": "3D generation from images",
+      "api_key_env": "BLENDERMCP_HYPER3D_API_KEY"
+    },
+    "hunyuan3d": {
+      "enabled": true,
+      "description": "3D generation from text",
+      "secret_id_env": "BLENDERMCP_HUNYUAN3D_SECRET_ID",
+      "secret_key_env": "BLENDERMCP_HUNYUAN3D_SECRET_KEY",
+      "api_url_env": "BLENDERMCP_HUNYUAN3D_API_URL"
     }
+  },
+  "telemetry": {
+    "enabled": false,
+    "description": "Set SUPABASE_ANON_KEY and SUPABASE_URL environment variables to enable",
+    "disable_env": "DISABLE_TELEMETRY"
+  },
+  "environment_setup": {
+    "windows": {
+      "venv_activation": ".venv\\Scripts\\Activate.ps1",
+      "python_command": "python",
+      "pip_command": "pip"
+    },
+    "notes": [
+      "For API keys, use environment variables rather than committing secrets to this file.",
+      "See .env.example for template.",
+      "Never commit .env files with real credentials to version control."
+    ]
   }
 }

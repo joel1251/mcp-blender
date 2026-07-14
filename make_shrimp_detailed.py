@@ -148,7 +148,7 @@ for i, (x, y, z, angle_z) in enumerate(leg_data):
 # === ANTENNAE ===
 antenna_data = [
     ('ant_long_L', 0.012, 1.8, (0.6, 0.15, 0.2), (deg(-20), 0, deg(-30))),
-    ('ant_long_R', 0.012, 1.8, (0.6, -0.15, 0.2), (deg(-20), 0, deg(30)),
+    ('ant_long_R', 0.012, 1.8, (0.6, -0.15, 0.2), (deg(-20), 0, deg(30))),
     ('ant_short_L', 0.018, 0.6, (0.55, 0.12, 0.18), (deg(-10), 0, deg(-20))),
     ('ant_short_R', 0.018, 0.6, (0.55, -0.12, 0.18), (deg(-10), 0, deg(20))),
 ]

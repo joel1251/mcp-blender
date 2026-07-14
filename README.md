@@ -1,4 +1,4 @@
-cle# MCP Blender (Workspace Analysis)
+# MCP Blender
 
 ## Descripcion del proyecto
 Este repositorio combina **dos implementaciones** relacionadas con MCP (Model Context Protocol) para controlar Blender desde un cliente LLM (Claude, Cursor, VS Code):
