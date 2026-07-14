@@ -1,0 +1,9 @@
+{
+  "mcp": {
+    "blender": {
+      "command": "node",
+      "args": ["C:\\Users\\ESPE-SD\\mcp-blender\\server.mjs"],
+      "type": "local"
+    }
+  }
+}
