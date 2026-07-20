@@ -1,0 +1,64 @@
+{
+  "engines": [
+    {
+      "id": "claude",
+      "label": "Claude Code",
+      "type": "cli",
+      "command": "claude",
+      "fallbackPaths": [
+        "~/.vscode/extensions/anthropic.claude-code-*/resources/native-binary/claude.exe",
+        "~/.vscode-insiders/extensions/anthropic.claude-code-*/resources/native-binary/claude.exe",
+        "~/.cursor/extensions/anthropic.claude-code-*/resources/native-binary/claude.exe",
+        "~/.local/bin/claude",
+        "~/AppData/Roaming/npm/claude.cmd"
+      ],
+      "args": ["-p", "--output-format", "text"],
+      "promptMode": "stdin",
+      "badge": "Usa tu Pro",
+      "icon": "✦",
+      "description": "Llama al programa Claude Code instalado (inicia sesión con tu cuenta Pro, sin API key).",
+      "install": "npm install -g @anthropic-ai/claude-code   —luego ejecuta:   claude   e inicia sesión con tu cuenta Pro.",
+      "installUrl": "https://code.claude.com/docs/en/quickstart"
+    },
+    {
+      "id": "opencode",
+      "label": "OpenCode",
+      "type": "cli",
+      "command": "opencode",
+      "fallbackPaths": [
+        "~/AppData/Roaming/npm/opencode.cmd",
+        "~/.opencode/bin/opencode",
+        "~/.local/bin/opencode"
+      ],
+      "args": ["run"],
+      "promptMode": "stdin",
+      "badge": "Open source",
+      "icon": "❖",
+      "description": "Llama al programa OpenCode instalado (usa el mismo login/modelo que tu OpenCode Desktop).",
+      "install": "npm install -g opencode-ai   (o:  curl -fsSL https://opencode.ai/install | bash )",
+      "installUrl": "https://opencode.ai/docs/cli/"
+    },
+    {
+      "id": "hermes",
+      "label": "Hermes",
+      "type": "cli",
+      "command": "hermes",
+      "fallbackPaths": [
+        "~/AppData/Local/hermes/hermes-agent/venv/Scripts/hermes.exe",
+        "~/.local/bin/hermes"
+      ],
+      "args": ["-z"],
+      "promptMode": "arg",
+      "env": {
+        "SSL_CERT_FILE": "~/.hermes/ca-bundle.pem",
+        "REQUESTS_CA_BUNDLE": "~/.hermes/ca-bundle.pem",
+        "GRPC_DEFAULT_SSL_ROOTS_FILE_PATH": "~/.hermes/ca-bundle.pem"
+      },
+      "badge": "Nous · Gemini",
+      "icon": "☤",
+      "description": "Agente Hermes de Nous Research usando Gemini gratis. Incluye el bundle de CA para el escaneo SSL de Norton.",
+      "install": "curl -fsSL https://hermes-agent.nousresearch.com/install.sh | bash",
+      "installUrl": "https://hermes-agent.nousresearch.com/docs/getting-started/quickstart"
+    }
+  ]
+}

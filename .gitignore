@@ -87,3 +87,9 @@ htmlcov/
 dist/
 build/
 *.whl
+
+# AI & Workspace Configuration
+.claude/
+.agents/
+IMPLEMENTATION_PLAN.md
+walkthrough.md

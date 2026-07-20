@@ -2,7 +2,14 @@
   "name": "blender-mcp",
   "version": "1.0.0",
   "type": "module",
+  "scripts": {
+    "web": "node web/server.mjs"
+  },
   "dependencies": {
-    "@modelcontextprotocol/sdk": "latest"
+    "@anthropic-ai/sdk": "^0.111.0",
+    "@modelcontextprotocol/sdk": "latest",
+    "cors": "^2.8.6",
+    "express": "^5.2.1",
+    "three": "^0.185.1"
   }
 }

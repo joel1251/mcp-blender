@@ -1,0 +1,944 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Blender Studio · Crea con IA</title>
+<style>
+  :root {
+    --bg: #0b0d13;
+    --bg-2: #0e111a;
+    --card: rgba(23, 27, 38, 0.72);
+    --card-solid: #171b26;
+    --card-2: #1d2230;
+    --border: rgba(255, 255, 255, 0.08);
+    --border-strong: rgba(255, 255, 255, 0.14);
+    --text: #f4f6fb;
+    --muted: #a2a9bd;
+    --muted-2: #6b7186;
+    --brand: #7c6cff;
+    --brand-2: #4ee0d6;
+    --brand-3: #ff8fb0;
+    --ok: #35d6a4;
+    --err: #ff6b7d;
+    --warn: #ffcb6b;
+    --radius: 20px;
+    --radius-sm: 12px;
+    --shadow: 0 20px 60px -24px rgba(0, 0, 0, 0.7);
+  }
+  * { box-sizing: border-box; }
+  ::selection { background: rgba(124, 108, 255, 0.32); color: #fff; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    font-family: "Inter", -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+    background:
+      radial-gradient(1100px 600px at 12% -8%, rgba(124, 108, 255, 0.20), transparent 55%),
+      radial-gradient(900px 520px at 96% 4%, rgba(78, 224, 214, 0.14), transparent 55%),
+      radial-gradient(700px 500px at 60% 100%, rgba(255, 143, 176, 0.08), transparent 60%),
+      var(--bg);
+    color: var(--text);
+    -webkit-font-smoothing: antialiased;
+    min-height: 100vh;
+  }
+
+  /* ---------- Header ---------- */
+  header {
+    padding: 16px clamp(16px, 4vw, 40px);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    background: rgba(11, 13, 19, 0.72);
+    backdrop-filter: blur(16px);
+    border-bottom: 1px solid var(--border);
+    z-index: 20;
+  }
+  .brand { display: flex; align-items: center; gap: 12px; }
+  .brand .logo {
+    width: 34px; height: 34px; border-radius: 10px;
+    background: conic-gradient(from 140deg, var(--brand), var(--brand-2), var(--brand-3), var(--brand));
+    display: grid; place-items: center; font-size: 17px;
+    box-shadow: 0 6px 20px -6px rgba(124, 108, 255, 0.7);
+  }
+  .brand .title { line-height: 1.1; }
+  .brand .title h1 { font-size: 16px; margin: 0; font-weight: 700; letter-spacing: -0.01em; }
+  .brand .title p { margin: 2px 0 0; font-size: 11.5px; color: var(--muted); font-weight: 500; }
+
+  #status {
+    font-size: 12.5px; padding: 7px 14px 7px 12px; border-radius: 999px;
+    border: 1px solid var(--border); color: var(--muted);
+    display: inline-flex; align-items: center; gap: 8px;
+    background: rgba(255, 255, 255, 0.03); font-weight: 500;
+  }
+  #status::before {
+    content: ""; width: 8px; height: 8px; border-radius: 50%;
+    background: var(--muted-2); flex-shrink: 0; transition: background 0.3s;
+  }
+  #status.on { color: var(--ok); border-color: rgba(53, 214, 164, 0.35); background: rgba(53, 214, 164, 0.10); }
+  #status.on::before { background: var(--ok); box-shadow: 0 0 10px rgba(53, 214, 164, 0.9); }
+  #status.off { color: var(--err); border-color: rgba(255, 107, 125, 0.35); background: rgba(255, 107, 125, 0.10); }
+  #status.off::before { background: var(--err); box-shadow: 0 0 10px rgba(255, 107, 125, 0.9); }
+
+  /* ---------- Layout ---------- */
+  main { padding: clamp(20px, 3vw, 36px) clamp(16px, 4vw, 40px) 64px; max-width: 1280px; margin: 0 auto; }
+
+  .hero { margin-bottom: 26px; }
+  .hero h2 {
+    font-size: clamp(26px, 4vw, 40px); margin: 0 0 8px; font-weight: 800;
+    letter-spacing: -0.03em; line-height: 1.05;
+    background: linear-gradient(120deg, #fff 20%, #c9c6ff 55%, #a7f3ec 90%);
+    -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
+  }
+  .hero .sub { color: var(--muted); font-size: 15px; margin: 0 0 22px; max-width: 620px; }
+
+  .compose {
+    background: var(--card); border: 1px solid var(--border); border-radius: var(--radius);
+    padding: 20px; box-shadow: var(--shadow); backdrop-filter: blur(12px);
+  }
+  .compose label.section { font-size: 12px; font-weight: 700; color: var(--muted); letter-spacing: 0.01em; }
+
+  #naturalText {
+    width: 100%; margin-top: 10px; min-height: 84px; resize: vertical;
+    background: rgba(0, 0, 0, 0.28); border: 1px solid var(--border);
+    border-radius: var(--radius-sm); padding: 14px 16px; color: var(--text);
+    font-family: inherit; font-size: 16px; line-height: 1.5; transition: border-color 0.15s, box-shadow 0.15s;
+  }
+  #naturalText::placeholder { color: var(--muted-2); }
+  #naturalText:focus { outline: none; border-color: rgba(124, 108, 255, 0.6); box-shadow: 0 0 0 4px rgba(124, 108, 255, 0.14); }
+
+  /* ---------- Engine selector ---------- */
+  .engine-head { display: flex; align-items: center; justify-content: space-between; margin: 18px 0 10px; }
+  .engine-head .section { display: flex; align-items: center; gap: 8px; }
+  .engine-head .hint-mini { font-size: 11.5px; color: var(--muted-2); }
+  #engineSelector { display: grid; grid-template-columns: repeat(auto-fit, minmax(158px, 1fr)); gap: 10px; }
+  .engine-card {
+    text-align: left; cursor: pointer; position: relative;
+    background: rgba(255, 255, 255, 0.03); border: 1.5px solid var(--border);
+    border-radius: 14px; padding: 12px 13px; color: var(--text);
+    display: flex; flex-direction: column; gap: 8px; transition: all 0.16s ease;
+  }
+  .engine-card:hover { border-color: var(--border-strong); background: rgba(255, 255, 255, 0.055); transform: translateY(-1px); }
+  .engine-card.selected {
+    border-color: rgba(124, 108, 255, 0.85);
+    background: linear-gradient(160deg, rgba(124, 108, 255, 0.16), rgba(78, 224, 214, 0.06));
+    box-shadow: 0 0 0 4px rgba(124, 108, 255, 0.12);
+  }
+  .engine-card .top { display: flex; align-items: center; gap: 9px; }
+  .engine-card .ico {
+    width: 30px; height: 30px; border-radius: 9px; flex-shrink: 0;
+    display: grid; place-items: center; font-size: 15px;
+    background: rgba(255, 255, 255, 0.06); border: 1px solid var(--border);
+  }
+  .engine-card.selected .ico { background: linear-gradient(135deg, var(--brand), var(--brand-2)); border-color: transparent; color: #10121a; }
+  .engine-card .nm { font-weight: 700; font-size: 14px; line-height: 1.15; }
+  .engine-card .bd { font-size: 10.5px; color: var(--muted); font-weight: 600; }
+  .engine-card .foot { display: flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 600; }
+  .engine-card .foot .dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+  .engine-card.is-on .foot { color: var(--ok); }
+  .engine-card.is-on .foot .dot { background: var(--ok); box-shadow: 0 0 8px rgba(53, 214, 164, 0.8); }
+  .engine-card.is-off .foot { color: var(--muted-2); }
+  .engine-card.is-off .foot .dot { background: var(--muted-2); }
+
+  #engineDetails {
+    margin-top: 12px; border: 1px solid var(--border); border-radius: var(--radius-sm);
+    background: rgba(0, 0, 0, 0.22); padding: 13px 15px; font-size: 13px; color: var(--muted);
+    display: none;
+  }
+  #engineDetails.show { display: block; }
+  #engineDetails .ed-desc { color: var(--text); margin-bottom: 8px; }
+  #engineDetails .ed-install {
+    margin-top: 10px; padding: 11px 13px; border-radius: 10px;
+    background: rgba(255, 203, 107, 0.08); border: 1px solid rgba(255, 203, 107, 0.28);
+    color: #f0e2c2; font-size: 12.5px; line-height: 1.55;
+  }
+  #engineDetails .ed-install code {
+    display: block; margin-top: 6px; padding: 8px 10px; border-radius: 8px;
+    background: rgba(0, 0, 0, 0.4); color: #ffe3ad; font-family: Consolas, monospace;
+    font-size: 12px; white-space: pre-wrap; word-break: break-word;
+  }
+  #engineDetails a { color: var(--brand-2); text-decoration: none; font-weight: 600; }
+  #engineDetails a:hover { text-decoration: underline; }
+
+  .compose-actions { display: flex; align-items: center; gap: 12px; margin-top: 16px; }
+  .compose-actions .grow { flex: 1; }
+
+  /* ---------- Buttons ---------- */
+  button {
+    font-family: inherit; cursor: pointer; border: 1px solid var(--border);
+    background: rgba(255, 255, 255, 0.04); color: var(--text);
+    padding: 10px 14px; border-radius: 11px; font-size: 13.5px; font-weight: 600;
+    transition: background 0.15s, border-color 0.15s, transform 0.05s, filter 0.15s;
+  }
+  button:hover:not(:disabled) { background: rgba(255, 255, 255, 0.08); border-color: var(--border-strong); }
+  button:active:not(:disabled) { transform: translateY(1px); }
+  button:disabled { opacity: 0.45; cursor: not-allowed; }
+  button.primary {
+    border-color: transparent; color: #10121a; font-weight: 700;
+    background: linear-gradient(135deg, var(--brand-2), var(--brand));
+    box-shadow: 0 10px 26px -10px rgba(124, 108, 255, 0.75);
+  }
+  button.primary:hover:not(:disabled) { filter: brightness(1.07); }
+  button.lg { padding: 13px 24px; font-size: 15px; border-radius: 13px; }
+  button.ghost { background: transparent; }
+  button.full { width: 100%; }
+
+  /* ---------- Cards grid ---------- */
+  .grid { display: grid; grid-template-columns: minmax(0, 360px) minmax(0, 1fr); gap: 20px; margin-top: 26px; }
+  @media (max-width: 900px) { .grid { grid-template-columns: 1fr; } }
+
+  .stack { display: flex; flex-direction: column; gap: 20px; }
+
+  .card {
+    background: var(--card); border: 1px solid var(--border); border-radius: var(--radius);
+    padding: 18px; box-shadow: var(--shadow); backdrop-filter: blur(12px);
+  }
+  .card h3 {
+    font-size: 14px; margin: 0 0 14px; font-weight: 700; letter-spacing: -0.01em;
+    display: flex; align-items: center; gap: 9px; color: var(--text);
+  }
+  .card h3 .em { font-size: 15px; opacity: 0.9; }
+  .card h3.mt { margin-top: 22px; }
+
+  .btn-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; }
+  .btn-grid .full { grid-column: 1 / -1; }
+  .chip-btn { background: rgba(255, 255, 255, 0.035); font-weight: 600; font-size: 13px; }
+
+  .row { display: flex; gap: 9px; }
+  .row .field { flex: 1; }
+  .field { margin-bottom: 11px; }
+  .field label { display: block; font-size: 11.5px; color: var(--muted); margin-bottom: 6px; font-weight: 600; }
+  .field input, .field textarea {
+    width: 100%; padding: 9px 11px; border-radius: 10px; border: 1px solid var(--border);
+    background: rgba(0, 0, 0, 0.28); color: var(--text); font-family: inherit; font-size: 13.5px;
+    transition: border-color 0.15s, box-shadow 0.15s;
+  }
+  .field input:focus, .field textarea:focus {
+    outline: none; border-color: rgba(124, 108, 255, 0.6); box-shadow: 0 0 0 3px rgba(124, 108, 255, 0.14);
+  }
+
+  #code {
+    width: 100%; min-height: 200px; background: rgba(0, 0, 0, 0.34); color: #d5e0ff;
+    border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 13px;
+    font-family: "SFMono-Regular", Consolas, monospace; font-size: 13px; resize: vertical; line-height: 1.55;
+  }
+  #code:focus { outline: none; border-color: rgba(124, 108, 255, 0.6); box-shadow: 0 0 0 3px rgba(124, 108, 255, 0.14); }
+
+  #log {
+    background: rgba(0, 0, 0, 0.34); border: 1px solid var(--border); border-radius: var(--radius-sm);
+    padding: 4px 14px; height: 230px; overflow-y: auto; font-family: Consolas, monospace; font-size: 12.5px;
+  }
+  #log:empty::before {
+    content: "Sin actividad todavía — las acciones aparecerán aquí."; color: var(--muted-2);
+    display: block; padding: 16px 0;
+  }
+  .log-entry { margin: 11px 0; padding: 9px 0 9px 12px; border-left: 2px solid var(--border); }
+  .log-entry.is-ok { border-left-color: var(--ok); }
+  .log-entry.is-err { border-left-color: var(--err); }
+  .log-ok { color: var(--ok); } .log-err { color: var(--err); } .log-time { color: var(--muted-2); }
+  .log-entry > div:last-child { color: var(--muted); white-space: pre-wrap; margin-top: 4px; word-break: break-word; }
+
+  #objects { list-style: none; padding: 0; margin: 0; font-size: 13.5px; }
+  #objects li {
+    padding: 8px 2px; border-bottom: 1px solid var(--border); color: var(--muted);
+    display: flex; align-items: center; justify-content: space-between; gap: 8px;
+  }
+  #objects li:last-child { border-bottom: none; }
+  #objects li .obj-name {
+    color: var(--text); font-weight: 600; cursor: pointer; flex: 1;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  #objects li .obj-name:hover { color: var(--brand-2); }
+  #objects li .obj-type { font-size: 10.5px; color: var(--muted-2); text-transform: uppercase; letter-spacing: 0.04em; flex-shrink: 0; }
+  #objects li .obj-del {
+    flex-shrink: 0; width: 24px; height: 24px; padding: 0; line-height: 1; border-radius: 7px;
+    font-size: 15px; color: var(--muted); background: transparent; border: 1px solid transparent;
+  }
+  #objects li .obj-del:hover { color: var(--err); border-color: rgba(255, 107, 125, 0.4); background: rgba(255, 107, 125, 0.10); }
+
+  #editObjectBox { display: none; margin-top: 12px; padding: 14px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: rgba(0, 0, 0, 0.22); }
+  #editObjectBox.open { display: block; }
+  #editObjectBox .edit-title { font-size: 13px; font-weight: 700; margin-bottom: 12px; display: flex; align-items: center; justify-content: space-between; }
+  #editObjectBox .edit-title button { padding: 3px 10px; font-size: 11.5px; }
+  .vec3-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 7px; margin-bottom: 9px; }
+  .vec3-row input { width: 100%; padding: 7px 8px; font-size: 12.5px; border-radius: 8px; border: 1px solid var(--border); background: rgba(0, 0, 0, 0.3); color: var(--text); }
+  .vec3-label { font-size: 10.5px; color: var(--muted-2); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 5px; }
+
+  #viewer3d {
+    border: 1px solid var(--border); border-radius: var(--radius-sm); overflow: hidden; height: 420px;
+    background: radial-gradient(120% 120% at 50% 0%, #12151f 0%, #0a0c11 70%); position: relative;
+  }
+  #viewer3d canvas { position: absolute; inset: 0; width: 100% !important; height: 100% !important; display: block; touch-action: none; cursor: grab; z-index: 2; }
+  #viewer3d canvas:active { cursor: grabbing; }
+  #viewerImg { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; display: none; z-index: 1; }
+  #viewer3d.show-img #viewerImg { display: block; }
+  #previewPlaceholder {
+    position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; text-align: center;
+    padding: 16px; color: var(--muted-2); font-size: 13px; z-index: 3; pointer-events: none;
+  }
+  #viewer3d.ready #previewPlaceholder { display: none; }
+  .viewer-badge {
+    position: absolute; top: 10px; left: 12px; z-index: 4; pointer-events: none;
+    font-size: 10.5px; font-weight: 600; letter-spacing: 0.02em; color: var(--muted);
+    background: rgba(0, 0, 0, 0.55); border: 1px solid var(--border); border-radius: 999px; padding: 4px 10px;
+    display: none;
+  }
+  #viewer3d.gl-on .viewer-badge { display: inline-flex; align-items: center; gap: 6px; }
+  .viewer-badge::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: var(--brand-2); box-shadow: 0 0 8px var(--brand-2); }
+  .hint { color: var(--muted-2); font-size: 11.5px; margin-top: 9px; text-align: center; }
+  .left-hint { text-align: left !important; margin: -4px 0 10px; }
+
+  /* ---------- Métricas ---------- */
+  .metrics-card { margin-bottom: 26px; }
+  .metrics-head { display: flex; align-items: baseline; gap: 10px; margin-bottom: 14px; }
+  .metrics-head h3 { margin: 0; font-size: 15px; font-weight: 700; letter-spacing: -0.01em; }
+  .metrics-sub { font-size: 12px; color: var(--muted-2); }
+  .metrics-grid {
+    display: grid; grid-template-columns: repeat(3, 1fr);
+    border: 1px solid var(--border); border-radius: var(--radius-sm); overflow: hidden;
+    background: rgba(0, 0, 0, 0.22);
+  }
+  .metric { padding: 16px 18px; border-right: 1px solid var(--border); }
+  .metric:last-child { border-right: none; }
+  .metric-label { font-size: 12px; color: var(--muted); margin-bottom: 8px; font-weight: 600; }
+  .metric-value {
+    font-size: 26px; font-weight: 750; letter-spacing: -0.02em; line-height: 1.1;
+    font-variant-numeric: tabular-nums;
+    background: linear-gradient(120deg, #fff, #bfe9e3);
+    -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
+  }
+  .metric-value.pending { background: none; -webkit-text-fill-color: initial; color: var(--muted-2); font-weight: 600; }
+  .metric-note { font-size: 10.5px; color: var(--muted-2); margin-top: 6px; }
+  @media (max-width: 620px) {
+    .metrics-grid { grid-template-columns: 1fr; }
+    .metric { border-right: none; border-bottom: 1px solid var(--border); }
+    .metric:last-child { border-bottom: none; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand">
+    <div class="logo">B</div>
+    <div class="title">
+      <h1>Blender Studio</h1>
+      <p>Crea en 3D con lenguaje natural</p>
+    </div>
+  </div>
+  <span id="status">comprobando…</span>
+</header>
+
+<main>
+  <!-- ================= HERO / COMPOSER ================= -->
+  <section class="hero">
+    <h2>¿Qué quieres crear hoy?</h2>
+    <p class="sub">Describe lo que imaginas y deja que el motor de IA que elijas lo construya dentro de Blender. Tú eliges qué cerebro usar.</p>
+
+    <div class="compose">
+      <label class="section" for="naturalText">Tu instrucción</label>
+      <textarea id="naturalText" spellcheck="false" placeholder="ej: un barco de vela navegando, o un cubo grande en 2,0,1, o limpia la escena">dibuja un barco</textarea>
+
+      <div class="engine-head">
+        <span class="section">Motor de IA</span>
+        <span class="hint-mini">Elige con qué programa generar</span>
+      </div>
+      <div id="engineSelector"><div class="hint" style="grid-column:1/-1">Cargando motores…</div></div>
+      <div id="engineDetails"></div>
+
+      <div class="compose-actions">
+        <span class="grow"></span>
+        <button class="primary lg" id="runNatural">Generar en Blender</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= MÉTRICAS ================= -->
+  <section class="card metrics-card">
+    <div class="metrics-head">
+      <h3>Métricas</h3>
+      <span class="metrics-sub" id="metricsSub">de la última generación</span>
+    </div>
+    <div class="metrics-grid">
+      <div class="metric">
+        <div class="metric-label">Distancia de Chamfer</div>
+        <div class="metric-value pending" id="metricChamfer">—</div>
+        <div class="metric-note" id="metricChamferNote">requiere modelo de referencia</div>
+      </div>
+      <div class="metric">
+        <div class="metric-label">Índice SSIM</div>
+        <div class="metric-value pending" id="metricSSIM">—</div>
+        <div class="metric-note" id="metricSSIMNote">requiere imagen de referencia</div>
+      </div>
+      <div class="metric">
+        <div class="metric-label">Tiempo de generación</div>
+        <div class="metric-value pending" id="metricTime">—</div>
+        <div class="metric-note" id="metricTimeNote">segundos</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= TOOLS GRID ================= -->
+  <div class="grid">
+    <!-- LEFT COLUMN -->
+    <div class="stack">
+      <div class="card">
+        <h3>Acciones rápidas</h3>
+        <div class="btn-grid">
+          <button class="chip-btn" data-cmd="limpiar">Limpiar escena</button>
+          <button class="chip-btn" data-cmd="refrescar">Refrescar</button>
+        </div>
+
+        <h3 class="mt">Primitivas</h3>
+        <div class="row">
+          <div class="field"><label>X</label><input id="px" type="number" value="0" step="0.5"></div>
+          <div class="field"><label>Y</label><input id="py" type="number" value="0" step="0.5"></div>
+          <div class="field"><label>Z</label><input id="pz" type="number" value="0" step="0.5"></div>
+        </div>
+        <div class="btn-grid">
+          <button class="chip-btn" data-cmd="cubo">+ Cubo</button>
+          <button class="chip-btn" data-cmd="esfera">+ Esfera</button>
+          <button class="chip-btn full" data-cmd="cilindro">+ Cilindro</button>
+        </div>
+
+        <h3 class="mt">Modelos del proyecto</h3>
+        <div class="btn-grid">
+          <button class="chip-btn full" data-script="shrimp_detailed">Dibujar barco</button>
+          <button class="chip-btn full" data-script="butterfly">Dibujar mariposa</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>Objetos en escena</h3>
+        <p class="hint left-hint">Clic en el nombre para editar (mover / rotar / escalar), o en × para eliminar.</p>
+        <ul id="objects"><li><span class="obj-name">—</span></li></ul>
+
+        <div id="editObjectBox">
+          <div class="edit-title">
+            <span id="editObjectName">—</span>
+            <button id="editObjectClose">Cerrar</button>
+          </div>
+          <div class="vec3-label">Posición (X, Y, Z)</div>
+          <div class="vec3-row">
+            <input id="editLocX" type="number" step="0.1">
+            <input id="editLocY" type="number" step="0.1">
+            <input id="editLocZ" type="number" step="0.1">
+          </div>
+          <div class="vec3-label">Rotación en grados (X, Y, Z)</div>
+          <div class="vec3-row">
+            <input id="editRotX" type="number" step="5">
+            <input id="editRotY" type="number" step="5">
+            <input id="editRotZ" type="number" step="5">
+          </div>
+          <div class="vec3-label">Escala (X, Y, Z)</div>
+          <div class="vec3-row">
+            <input id="editSclX" type="number" step="0.1">
+            <input id="editSclY" type="number" step="0.1">
+            <input id="editSclZ" type="number" step="0.1">
+          </div>
+          <button class="primary full" id="editObjectSave">Guardar cambios</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT COLUMN -->
+    <div class="stack">
+      <div class="card">
+        <h3>Vista de la escena</h3>
+        <div style="display:flex; gap:9px; margin-bottom:12px;">
+          <button id="takeScreenshot" style="flex:1">Actualizar vista</button>
+          <button id="recenterView" title="Reencuadrar cámara">Centrar</button>
+        </div>
+        <div id="viewer3d">
+          <span class="viewer-badge">Visor 3D interactivo</span>
+          <img id="viewerImg" alt="vista de la escena">
+          <span id="previewPlaceholder">Preparando visor 3D…</span>
+        </div>
+        <p class="hint" id="viewerHint">Cargando visor 3D…</p>
+      </div>
+
+      <div class="card">
+        <h3>Ejecutar Python en Blender</h3>
+        <textarea id="code" spellcheck="false">import bpy
+bpy.ops.mesh.primitive_cube_add(size=1, location=(0, 0, 0))
+print('ok')</textarea>
+        <div style="margin-top:12px; display:flex; gap:9px;">
+          <button class="primary" id="run">Ejecutar</button>
+          <button class="ghost" id="clearLog">Limpiar consola</button>
+        </div>
+
+        <h3 class="mt">Consola</h3>
+        <div id="log"></div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<script>
+const API = "";
+
+// Estado del visor: gl=true cuando el visor 3D interactivo está activo;
+// refresh = función que recarga el modelo en el canvas (la define el módulo 3D).
+window.__view = { gl: false, refresh: null };
+
+/* ---------------- utilidades ---------------- */
+function fmtTime() { return new Date().toTimeString().slice(0, 8); }
+function escapeHtml(s) { return String(s).replace(/[&<>]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c])); }
+
+function logEntry(title, payload, ok) {
+  const el = document.createElement("div");
+  el.className = "log-entry " + (ok ? "is-ok" : "is-err");
+  const body = typeof payload === "string" ? payload : JSON.stringify(payload, null, 2);
+  el.innerHTML = `<div><span class="log-time">[${fmtTime()}]</span> <strong class="${ok ? "log-ok" : "log-err"}">${escapeHtml(title)}</strong></div><div>${escapeHtml(body)}</div>`;
+  const log = document.getElementById("log");
+  log.appendChild(el);
+  log.scrollTop = log.scrollHeight;
+}
+
+async function callApi(path, opts) {
+  const res = await fetch(API + path, opts);
+  const data = await res.json().catch(() => ({}));
+  return { ok: res.ok, data };
+}
+
+/* ---------------- estado / conexión ---------------- */
+async function refreshStatus() {
+  const statusEl = document.getElementById("status");
+  try {
+    const { data } = await callApi("/api/status");
+    if (data.connected) { statusEl.textContent = "Blender conectado"; statusEl.className = "on"; }
+    else { statusEl.textContent = "Blender desconectado"; statusEl.className = "off"; }
+  } catch {
+    statusEl.textContent = "Servidor web caído"; statusEl.className = "off";
+  }
+}
+
+/* ---------------- selector de motores de IA ---------------- */
+let ENGINES = [];
+let selectedEngineId = "rules";
+
+async function loadEngines() {
+  const box = document.getElementById("engineSelector");
+  try {
+    const { data } = await callApi("/api/engines");
+    ENGINES = data.engines || [];
+  } catch {
+    ENGINES = [];
+  }
+  if (!ENGINES.length) { box.innerHTML = `<div class="hint" style="grid-column:1/-1">No se pudieron cargar los motores.</div>`; return; }
+
+  // Selección inicial: primer motor instalado (prefiere una IA si hay); si no, reglas.
+  const firstInstalledAI = ENGINES.find((e) => e.installed && e.type === "cli");
+  selectedEngineId = firstInstalledAI ? firstInstalledAI.id : (ENGINES.find((e) => e.installed)?.id || ENGINES[0].id);
+
+  box.innerHTML = ENGINES.map((e) => `
+    <button class="engine-card ${e.installed ? "is-on" : "is-off"}" data-id="${escapeHtml(e.id)}">
+      <div class="top">
+        <span class="ico">${escapeHtml((e.label || "?").trim().charAt(0).toUpperCase())}</span>
+        <span>
+          <div class="nm">${escapeHtml(e.label)}</div>
+          <div class="bd">${escapeHtml(e.badge || "")}</div>
+        </span>
+      </div>
+      <div class="foot"><span class="dot"></span>${e.installed ? "Listo" : "No instalado"}</div>
+    </button>`).join("");
+
+  box.querySelectorAll(".engine-card").forEach((card) => {
+    card.addEventListener("click", () => selectEngine(card.dataset.id));
+  });
+  selectEngine(selectedEngineId);
+}
+
+function selectEngine(id) {
+  selectedEngineId = id;
+  const engine = ENGINES.find((e) => e.id === id);
+  document.querySelectorAll(".engine-card").forEach((c) => c.classList.toggle("selected", c.dataset.id === id));
+
+  const details = document.getElementById("engineDetails");
+  if (!engine) { details.classList.remove("show"); return; }
+  let html = `<div class="ed-desc">${escapeHtml(engine.description || "")}</div>`;
+  if (engine.unverified && engine.installed) {
+    html += `<div class="ed-install">Invocación no verificada: si no responde bien, ajusta su comando en <code>web/ai-engines.json</code>.</div>`;
+  }
+  if (!engine.installed && engine.type === "cli") {
+    html += `<div class="ed-install">Este programa aún no está instalado. Para activarlo:
+      <code>${escapeHtml(engine.install || "")}</code>
+      ${engine.installUrl ? `<div style="margin-top:8px"><a href="${escapeHtml(engine.installUrl)}" target="_blank" rel="noopener">Ver documentación</a></div>` : ""}
+    </div>`;
+  }
+  details.innerHTML = html;
+  details.classList.add("show");
+}
+
+/* ---------------- escena / objetos ---------------- */
+async function refreshScene() {
+  const list = document.getElementById("objects");
+  try {
+    const { data } = await callApi("/api/scene");
+    const objs = data?.result?.objects || [];
+    list.innerHTML = objs.length
+      ? objs.map((o) => `
+          <li data-name="${escapeHtml(o.name)}">
+            <span class="obj-name" title="Editar ${escapeHtml(o.name)}">${escapeHtml(o.name)}</span>
+            <span class="obj-type">${escapeHtml(o.type)}</span>
+            <button class="obj-del" title="Eliminar ${escapeHtml(o.name)}">×</button>
+          </li>`).join("")
+      : "<li><span class=\"obj-name\">Sin objetos</span></li>";
+  } catch {
+    list.innerHTML = "<li><span class=\"obj-name\">Error al consultar</span></li>";
+  }
+}
+
+async function openEditObject(name) {
+  try {
+    const { ok, data } = await callApi(`/api/objects/${encodeURIComponent(name)}`);
+    if (!ok || data.status !== "success") { logEntry(`objeto: ${name}`, data, false); return; }
+    const obj = data.object;
+    document.getElementById("editObjectName").textContent = obj.name;
+    document.getElementById("editObjectBox").dataset.name = obj.name;
+    document.getElementById("editLocX").value = obj.location[0].toFixed(3);
+    document.getElementById("editLocY").value = obj.location[1].toFixed(3);
+    document.getElementById("editLocZ").value = obj.location[2].toFixed(3);
+    document.getElementById("editRotX").value = obj.rotation_degrees[0].toFixed(1);
+    document.getElementById("editRotY").value = obj.rotation_degrees[1].toFixed(1);
+    document.getElementById("editRotZ").value = obj.rotation_degrees[2].toFixed(1);
+    document.getElementById("editSclX").value = obj.scale[0].toFixed(3);
+    document.getElementById("editSclY").value = obj.scale[1].toFixed(3);
+    document.getElementById("editSclZ").value = obj.scale[2].toFixed(3);
+    document.getElementById("editObjectBox").classList.add("open");
+  } catch (err) {
+    logEntry(`objeto: ${name}`, err.message, false);
+  }
+}
+
+function closeEditObject() { document.getElementById("editObjectBox").classList.remove("open"); }
+
+async function saveEditObject() {
+  const box = document.getElementById("editObjectBox");
+  const name = box.dataset.name;
+  if (!name) return;
+  const body = {
+    location: [+document.getElementById("editLocX").value, +document.getElementById("editLocY").value, +document.getElementById("editLocZ").value],
+    rotation_degrees: [+document.getElementById("editRotX").value, +document.getElementById("editRotY").value, +document.getElementById("editRotZ").value],
+    scale: [+document.getElementById("editSclX").value, +document.getElementById("editSclY").value, +document.getElementById("editSclZ").value],
+  };
+  const btn = document.getElementById("editObjectSave");
+  btn.disabled = true;
+  try {
+    const { ok, data } = await callApi(`/api/objects/${encodeURIComponent(name)}/update`, {
+      method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body),
+    });
+    logEntry(`actualizar: ${name}`, data, ok && data.status === "success");
+  } catch (err) {
+    logEntry(`actualizar: ${name}`, err.message, false);
+  } finally {
+    btn.disabled = false; refreshScene(); refreshPreview();
+  }
+}
+
+async function deleteObject(name) {
+  if (!confirm(`¿Eliminar "${name}"?`)) return;
+  try {
+    const { ok, data } = await callApi(`/api/objects/${encodeURIComponent(name)}/delete`, { method: "POST" });
+    logEntry(`eliminar: ${name}`, data, ok && data.status === "success");
+    if (document.getElementById("editObjectBox").dataset.name === name) closeEditObject();
+  } catch (err) {
+    logEntry(`eliminar: ${name}`, err.message, false);
+  } finally {
+    refreshScene(); refreshPreview();
+  }
+}
+
+document.getElementById("objects").addEventListener("click", (e) => {
+  const li = e.target.closest("li[data-name]");
+  if (!li) return;
+  const name = li.dataset.name;
+  if (e.target.classList.contains("obj-del")) deleteObject(name);
+  else if (e.target.classList.contains("obj-name")) openEditObject(name);
+});
+document.getElementById("editObjectClose").addEventListener("click", closeEditObject);
+document.getElementById("editObjectSave").addEventListener("click", saveEditObject);
+
+/* ---------------- vista / preview ---------------- */
+// Respaldo estático (render PNG) SOLO cuando el visor 3D no está disponible.
+// Nunca toca el canvas 3D: usa una capa <img> separada para no pisarlo.
+async function refreshStaticView() {
+  if (window.__view.gl) return;
+  const box = document.getElementById("viewer3d");
+  const img = document.getElementById("viewerImg");
+  try {
+    const { ok, data } = await callApi("/api/screenshot", { method: "POST" });
+    if (window.__view.gl) return; // el visor 3D se activó mientras tanto
+    if (ok && data.status === "success") {
+      img.onload = () => box.classList.add("show-img", "ready");
+      img.src = data.url + "?t=" + Date.now();
+    }
+  } catch { /* silencioso */ }
+}
+
+// Refresca la vista. Si el visor 3D está activo, recarga el modelo ahí
+// (preservando tu ángulo de cámara salvo que pidas reencuadrar).
+async function refreshPreview(reframe) {
+  if (window.__view.refresh) { await window.__view.refresh(reframe); return; }
+  refreshStaticView();
+}
+
+/* ---------------- ejecución de código ---------------- */
+async function runCode(code, label) {
+  try {
+    const { ok, data } = await callApi("/api/execute", {
+      method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ code }),
+    });
+    logEntry(label || "execute_code", data, ok && data.status !== "error");
+  } catch (err) {
+    logEntry(label || "execute_code", err.message, false);
+  } finally {
+    refreshScene(); refreshStatus(); refreshPreview();
+  }
+}
+
+document.getElementById("takeScreenshot").addEventListener("click", async () => {
+  const btn = document.getElementById("takeScreenshot");
+  btn.disabled = true; btn.textContent = "Actualizando…";
+  try { await refreshPreview(true); }
+  finally { btn.disabled = false; btn.textContent = "Actualizar vista"; }
+});
+
+document.getElementById("recenterView").addEventListener("click", () => {
+  if (window.__view.recenter) window.__view.recenter();
+});
+
+/* ---------------- generar con IA / reglas ---------------- */
+document.getElementById("runNatural").addEventListener("click", async () => {
+  const text = document.getElementById("naturalText").value.trim();
+  if (!text) return;
+  const engine = ENGINES.find((e) => e.id === selectedEngineId);
+  if (engine && !engine.installed) {
+    logEntry(`motor no disponible: ${engine.label}`,
+      `El programa "${engine.label}" no está instalado.\n${engine.install || ""}`, false);
+    return;
+  }
+  const btn = document.getElementById("runNatural");
+  const original = btn.textContent;
+  btn.disabled = true; btn.textContent = "Generando…";
+  setMetricTime(null, true); // estado "…"
+  const t0 = performance.now();
+  try {
+    const { ok, data } = await callApi("/api/natural", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ text, mode: selectedEngineId }),
+    });
+    const elapsedMs = (data && typeof data.durationMs === "number") ? data.durationMs : (performance.now() - t0);
+    const success = ok && data.status !== "error";
+    const label = `${engine ? engine.label : selectedEngineId}: "${text}"`;
+    logEntry(label, data, success);
+    if (data && data.code) logEntry("código generado", data.code, success);
+    if (success) {
+      setMetricTime(elapsedMs, false);
+      document.getElementById("metricsSub").textContent =
+        `${engine ? engine.label : selectedEngineId} · ${new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`;
+    } else {
+      setMetricTime(null, false);
+    }
+  } catch (err) {
+    logEntry("generar", err.message, false);
+    setMetricTime(null, false);
+  } finally {
+    btn.disabled = false; btn.textContent = original;
+    refreshScene(); refreshStatus(); refreshPreview();
+  }
+});
+
+// Muestra el tiempo de generación en el panel de métricas.
+function setMetricTime(ms, loading) {
+  const el = document.getElementById("metricTime");
+  if (loading) { el.textContent = "…"; el.classList.add("pending"); return; }
+  if (ms == null) { el.textContent = "—"; el.classList.add("pending"); return; }
+  const s = ms / 1000;
+  el.textContent = s < 100 ? s.toFixed(1) + " s" : Math.round(s) + " s";
+  el.classList.remove("pending");
+}
+
+document.getElementById("run").addEventListener("click", () => {
+  runCode(document.getElementById("code").value, "código personalizado");
+});
+document.getElementById("clearLog").addEventListener("click", () => { document.getElementById("log").innerHTML = ""; });
+
+/* ---------------- primitivas / comandos ---------------- */
+document.querySelectorAll("button[data-cmd]").forEach((btn) => {
+  btn.addEventListener("click", async () => {
+    const cmd = btn.dataset.cmd;
+    const x = document.getElementById("px").value;
+    const y = document.getElementById("py").value;
+    const z = document.getElementById("pz").value;
+    if (cmd === "limpiar") return runCode("bpy.ops.object.select_all(action='SELECT')\nbpy.ops.object.delete()", "limpiar escena");
+    if (cmd === "refrescar") { refreshScene(); refreshStatus(); return; }
+    if (cmd === "cubo") return runCode(`bpy.ops.mesh.primitive_cube_add(size=2, location=(${x},${y},${z}))`, "crear cubo");
+    if (cmd === "esfera") return runCode(`bpy.ops.mesh.primitive_uv_sphere_add(radius=1, location=(${x},${y},${z}))`, "crear esfera");
+    if (cmd === "cilindro") return runCode(`bpy.ops.mesh.primitive_cylinder_add(radius=1, depth=2, location=(${x},${y},${z}))`, "crear cilindro");
+  });
+});
+
+document.querySelectorAll("button[data-script]").forEach((btn) => {
+  btn.addEventListener("click", async () => {
+    const name = btn.dataset.script;
+    btn.disabled = true;
+    try {
+      const { ok, data } = await callApi(`/api/scripts/${name}/run`, { method: "POST" });
+      logEntry(`script: ${name}`, data, ok && data.status !== "error");
+    } catch (err) {
+      logEntry(`script: ${name}`, err.message, false);
+    } finally {
+      btn.disabled = false; refreshScene(); refreshStatus(); refreshPreview();
+    }
+  });
+});
+
+/* ---------------- init ---------------- */
+loadEngines();
+refreshStatus();
+refreshScene();
+// La primera vista la dispara el módulo del visor 3D (exportación GLB, rápida).
+// Solo si el visor 3D no logra cargar, su catch hará el render estático.
+setInterval(refreshStatus, 8000);
+
+/* ---------------- visor 3D interactivo (Three.js) ---------------- */
+(async () => {
+  const container = document.getElementById("viewer3d");
+  try {
+    const THREE = await import("/vendor/three/build/three.module.js");
+    const { GLTFLoader } = await import("/vendor/three/examples/jsm/loaders/GLTFLoader.js");
+    const { OrbitControls } = await import("/vendor/three/examples/jsm/controls/OrbitControls.js");
+
+    let scene3d, camera3d, renderer3d, controls3d, currentModel3d;
+    let firstModel = true;
+    const gltfLoader = new GLTFLoader();
+
+    function disposeObject(obj) {
+      obj.traverse((o) => {
+        if (o.geometry) o.geometry.dispose();
+        const mats = o.material ? (Array.isArray(o.material) ? o.material : [o.material]) : [];
+        for (const m of mats) {
+          for (const k in m) { const v = m[k]; if (v && v.isTexture) v.dispose(); }
+          if (m.dispose) m.dispose();
+        }
+      });
+    }
+
+    function sizeOf() {
+      return { w: container.clientWidth || 400, h: container.clientHeight || 420 };
+    }
+
+    function initViewer() {
+      const { w, h } = sizeOf();
+      scene3d = new THREE.Scene();
+      scene3d.background = new THREE.Color(0x0b0d13);
+
+      camera3d = new THREE.PerspectiveCamera(45, w / h, 0.01, 8000);
+      camera3d.position.set(6, -6, 4.2);
+
+      renderer3d = new THREE.WebGLRenderer({ antialias: true });
+      renderer3d.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+      renderer3d.setSize(w, h);
+      container.appendChild(renderer3d.domElement);
+      container.classList.add("gl-on", "ready");
+      container.classList.remove("show-img");
+
+      controls3d = new OrbitControls(camera3d, renderer3d.domElement);
+      controls3d.enableDamping = true;
+      controls3d.dampingFactor = 0.08;
+      controls3d.screenSpacePanning = true;
+      controls3d.minDistance = 0.2;
+      controls3d.maxDistance = 500;
+
+      // Iluminación
+      scene3d.add(new THREE.HemisphereLight(0xffffff, 0x1a1c26, 1.15));
+      const key = new THREE.DirectionalLight(0xffffff, 1.9); key.position.set(6, -6, 10); scene3d.add(key);
+      const fill = new THREE.DirectionalLight(0x88aaff, 0.5); fill.position.set(-6, 4, -4); scene3d.add(fill);
+
+      // Cuadrícula + ejes para orientarse (GLB de Blender llega en Y-up)
+      const grid = new THREE.GridHelper(20, 20, 0x3a4055, 0x22262f);
+      grid.material.transparent = true; grid.material.opacity = 0.5;
+      scene3d.add(grid);
+      scene3d.add(new THREE.AxesHelper(1.5));
+
+      const onResize = () => {
+        const { w, h } = sizeOf(); if (!w || !h) return;
+        camera3d.aspect = w / h; camera3d.updateProjectionMatrix();
+        renderer3d.setSize(w, h);
+      };
+      new ResizeObserver(onResize).observe(container);
+      window.addEventListener("resize", onResize);
+
+      (function animate3d() {
+        requestAnimationFrame(animate3d);
+        controls3d.update();
+        renderer3d.render(scene3d, camera3d);
+      })();
+    }
+
+    function frameCameraToObject(object) {
+      const box = new THREE.Box3().setFromObject(object);
+      if (box.isEmpty()) return;
+      const size = box.getSize(new THREE.Vector3());
+      const center = box.getCenter(new THREE.Vector3());
+      const maxDim = Math.max(size.x, size.y, size.z, 1);
+      camera3d.position.set(center.x + maxDim * 1.6, center.y - maxDim * 1.6, center.z + maxDim * 1.15);
+      camera3d.near = maxDim / 100; camera3d.far = maxDim * 100;
+      camera3d.updateProjectionMatrix();
+      controls3d.target.copy(center);
+      controls3d.update();
+    }
+
+    initViewer();
+
+    // Recarga el modelo desde Blender. reframe=true reencuadra la cámara;
+    // si no, preserva tu ángulo/zoom actual.
+    let reloading = false;
+    async function reloadModel(reframe) {
+      if (reloading) return false; // evita choques con Blender (un solo hilo)
+      reloading = true;
+      // Reintenta un par de veces: al arrancar, varias peticiones compiten por
+      // el socket de Blender y la exportación puede fallar de forma transitoria.
+      try {
+        for (let intento = 0; intento < 3; intento++) {
+          try {
+            const res = await fetch("/api/model", { method: "POST" });
+            const data = await res.json().catch(() => ({}));
+            if (res.ok && data.status === "success") {
+              const gltf = await gltfLoader.loadAsync(data.url + "?t=" + Date.now());
+              if (currentModel3d) { scene3d.remove(currentModel3d); disposeObject(currentModel3d); }
+              currentModel3d = gltf.scene;
+              scene3d.add(currentModel3d);
+              if (reframe || firstModel) { frameCameraToObject(currentModel3d); firstModel = false; }
+              return true;
+            }
+          } catch { /* reintenta */ }
+          await new Promise((r) => setTimeout(r, 700));
+        }
+        return false;
+      } finally {
+        reloading = false;
+      }
+    }
+
+    // Publica el visor 3D como fuente de verdad de la vista.
+    window.__view.gl = true;
+    window.__view.refresh = reloadModel;
+    window.__view.recenter = () => { if (currentModel3d) frameCameraToObject(currentModel3d); };
+    window.refreshPreview3D = reloadModel;
+
+    document.getElementById("viewerHint").textContent = "Arrastra = rotar · rueda = zoom · clic derecho = mover";
+    reloadModel(true);
+  } catch (err) {
+    // Si el visor 3D no pudo cargar (WebGL bloqueado, etc.), queda el render PNG.
+    window.__view.gl = false;
+    document.getElementById("viewerHint").textContent = "Visor 3D no disponible en este navegador — se muestra un render.";
+    refreshStaticView();
+    console.error("Visor 3D no disponible:", err);
+  }
+})();
+</script>
+</body>
+</html>

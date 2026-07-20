@@ -1,233 +1,137 @@
-# MCP Blender
+# MCP Blender Integration 🚀
 
-## Descripcion del proyecto
-Este repositorio combina **dos implementaciones** relacionadas con MCP (Model Context Protocol) para controlar Blender desde un cliente LLM (Claude, Cursor, VS Code):
+![Blender](https://img.shields.io/badge/blender-%23F5792A.svg?style=for-the-badge&logo=blender&logoColor=white)
+![NodeJS](https://img.shields.io/badge/node.js-6DA55F?style=for-the-badge&logo=node.js&logoColor=white)
+![Python](https://img.shields.io/badge/python-3670A0?style=for-the-badge&logo=python&logoColor=ffdd54)
 
-1. **Implementacion principal (Python, en `blender-mcp/`)**
-   - Addon de Blender (`blender-mcp/addon.py`) que levanta un socket TCP en Blender.
-   - Servidor MCP (`blender-mcp/src/blender_mcp/server.py`) basado en `mcp.server.fastmcp`.
-   - Integraciones opcionales con Poly Haven, Sketchfab, Hyper3D y Hunyuan3D.
+Un puente avanzado de comunicación que permite a Agentes de Inteligencia Artificial (LLMs) como **Claude**, **Hermes** y **OpenCode** interactuar, controlar y generar modelos en **Blender 3D** en tiempo real utilizando el **Model Context Protocol (MCP)**.
 
-2. **Implementacion alternativa/simple (raiz del workspace)**
-   - Servidor MCP en Node (`server.mjs`) con herramientas basicas (crear cubo, esfera, cilindro, limpiar escena, ejecutar Python).
-   - Receptor socket simple en Blender (`blender_socket_server.py`).
-   - Scripts de modelado de ejemplo (`make_butterfly.py`, `make_shrimp.py`, `make_shrimp_detailed.py`).
+---
 
-## Objetivo real del sistema
-Permitir que un agente MCP (como Claude) ejecute operaciones en Blender de forma remota/controlada por prompts, incluyendo:
-- inspeccion de escena,
-- creacion/modificacion de objetos,
-- ejecucion de codigo Python en Blender,
-- y (en la implementacion principal) uso de librerias externas de assets/modelos.
+## 📖 Descripción del Proyecto
 
-## Como deberia funcionar (flujo completo)
+Este proyecto conecta la capacidad de razonamiento y generación de código de los LLMs modernos directamente con la API de Python de Blender. A través de este sistema, un agente de IA puede inspeccionar tu escena, crear geometrías complejas, modificar materiales y ejecutar operaciones 3D de forma autónoma.
 
-### Flujo principal (recomendado)
-1. Instalar y habilitar `blender-mcp/addon.py` en Blender.
-2. Iniciar conexion desde el panel BlenderMCP (puerto por defecto: `9876`).
-3. Ejecutar el servidor MCP Python (`blender-mcp`) por stdio.
-4. Configurar cliente MCP (Claude/Cursor/VS Code) para usar ese servidor.
-5. El cliente invoca herramientas MCP -> `server.py` -> socket TCP -> addon en Blender.
-6. Blender ejecuta comando y responde JSON al servidor MCP.
+El proyecto está diseñado con una arquitectura cliente-servidor dividida en dos componentes principales:
+1. Un **servidor web/MCP en Node.js** que provee una interfaz gráfica de usuario (GUI) amigable y actúa como orquestador.
+2. Un **Addon en Python para Blender** que levanta un socket interno para recibir y ejecutar comandos de forma segura en el entorno 3D.
 
-### Flujo alternativo (legacy/simple)
-1. Levantar un receptor en Blender que acepte Python por socket (`blender_socket_server.py`, puerto `9999`).
-2. Ejecutar servidor MCP Node (`server.mjs`) en stdio.
-3. Configurar cliente MCP para apuntar al servidor Node.
-4. Cliente invoca tools -> Node envia codigo Python -> Blender ejecuta.
+## ✨ Características Principales
 
-## Arquitectura
+- 🧠 **Integración MCP Nativa**: Permite a modelos compatibles con MCP invocar herramientas directamente sobre la escena de Blender.
+- 🎨 **Interfaz Web Interactiva**: Panel de control en el navegador para monitorear comandos, visualizar métricas y gestionar los motores de IA activos.
+- 🔌 **Múltiples LLMs Soportados**: Preparado para trabajar con **Claude Code**, **OpenCode**, **Hermes** o reglas personalizadas.
+- ⚡ **Ejecución en Tiempo Real**: Los scripts generados por la IA se inyectan y ejecutan en la sesión activa de Blender instantáneamente.
+- 🛡️ **Seguridad Integrada**: Los comandos viajan a través de sockets locales, aislando el entorno de ejecución.
+
+## 🏗️ Arquitectura del Sistema
 
 ```mermaid
 flowchart LR
-  A[Cliente MCP\nClaude/Cursor/VSCode] --> B[Servidor MCP\nPython FastMCP o Node]
-  B --> C[Socket TCP localhost]
-  C --> D[Addon/Script en Blender]
-  D --> E[Blender API bpy]
-  D --> F[Servicios externos opcionales\nPoly Haven / Sketchfab / Hyper3D / Hunyuan3D]
+    A[Agente IA / Usuario Web] -->|HTTP / MCP| B[Node.js Server]
+    B -->|Socket TCP| C[Blender Addon]
+    C -->|bpy API| D[Escena 3D]
 ```
 
-## Tecnologias utilizadas
-- **Python 3.10+**
-- **Blender Python API (`bpy`)**
-- **MCP Python SDK (`mcp[cli]`)**
-- **Node.js (ESM)**
-- **@modelcontextprotocol/sdk (Node)**
-- **uv** (gestor recomendado en la implementacion principal)
-- **requests, supabase, tomli** (en implementacion principal)
+## 📋 Requisitos Previos
 
-## Requisitos
+Asegúrate de tener instalado en tu sistema:
+- **Blender** (Versión 4.1 o superior, compatible con Blender 5.x)
+- **Node.js** (Versión 18 o superior)
+- **Python** (Versión 3.10 o superior)
 
-### Requisitos base
-- Blender 3.0+
-- Python 3.10+
-- Node.js 18+
-- `uv` instalado (para flujo principal en `blender-mcp/`)
+## 🚀 Instalación y Configuración
 
-### Requisitos de servicios externos (opcionales)
-- **Sketchfab API token** (si habilitas Sketchfab)
-- **Hyper3D API key** (si habilitas Hyper3D)
-- **Hunyuan3D SecretId/SecretKey** o URL de API local (si habilitas Hunyuan3D)
-- **Poly Haven** no requiere key en este repo (usa endpoints publicos)
+### 1. Configurar el Servidor Web (Node.js)
 
-## Instalacion
+Abre una terminal en la raíz del proyecto e instala las dependencias:
 
-### 1) Clonar/abrir el workspace
-Abre la carpeta raiz `mcp-blender` en tu editor.
-
-### 2) Backend principal (Python) - recomendado
 ```bash
-cd blender-mcp
-uv sync
-```
-
-### 3) Backend alternativo (Node) - opcional
-```bash
+# Instalar dependencias
 npm install
+
+# Iniciar el servidor web
+npm run web
 ```
+El servidor quedará escuchando por defecto en el puerto `3000`. Puedes abrir `http://localhost:3000` en tu navegador para ver la interfaz.
 
-### 4) Instalar addon en Blender
-1. Blender -> Edit -> Preferences -> Add-ons
-2. Install...
-3. Selecciona `blender-mcp/addon.py`
-4. Habilita el addon "Blender MCP"
+### 2. Instalar el Addon en Blender
 
-## Variables de entorno
-Variables reconocidas por el backend Python (`blender-mcp/src/blender_mcp/server.py`):
+1. Abre **Blender**.
+2. Ve a `Edit` > `Preferences` > `Add-ons`.
+3. Haz clic en **Install...** y selecciona el archivo `blender-mcp/addon.py`.
+4. Marca la casilla para habilitar el addon **"Blender MCP"**.
+5. En la vista 3D de Blender, presiona la tecla `N` para abrir el panel lateral y busca la pestaña **BlenderMCP**.
+6. Asegúrate de que el puerto configurado (ej. `9876`) coincida y presiona **Connect to MCP server**.
 
-- `BLENDER_HOST` (default: `localhost`)
-- `BLENDER_PORT` (default: `9876`)
-- `DISABLE_TELEMETRY` (`true|1|yes|on` para desactivar)
-- `BLENDER_MCP_DISABLE_TELEMETRY`
-- `MCP_DISABLE_TELEMETRY`
+## 💻 Uso del Sistema
 
-Ejemplo (PowerShell):
-```powershell
-$env:BLENDER_HOST = "localhost"
-$env:BLENDER_PORT = "9876"
-$env:DISABLE_TELEMETRY = "true"
-```
+Una vez que ambos componentes (Node.js y el addon de Blender) están en ejecución:
 
-## Como ejecutar el backend
+1. Abre la interfaz web en `http://localhost:3000`.
+2. Selecciona tu **Motor de IA** preferido (Ej: Claude Code).
+3. Utiliza la caja de comandos para pedirle a la IA que cree o modifique algo en la escena. Ejemplos:
+   - *"Crea 3 esferas alineadas en el eje X"*
+   - *"Genera un script de python para modelar una mariposa"*
+   - *"Limpia la escena completa"*
+4. La IA procesará tu instrucción a través del servidor MCP, escribirá el script necesario utilizando la API `bpy` de Blender, y lo enviará al socket local para que Blender lo ejecute frente a tus ojos.
 
-### Opcion A: Backend Python principal
-```bash
-cd blender-mcp
-uv run blender-mcp
-```
+## 🤖 Conexión a Modelos de IA (LLMs)
 
-### Opcion B: Backend Node simple
-```bash
-node server.mjs
-```
+El sistema lee las configuraciones de los motores desde `ai-engines.json`. Cada motor requiere ser instalado globalmente en tu sistema operativo para que el servidor Node.js pueda invocarlo por consola (CLI). 
 
-## Como ejecutar el frontend
-Este repositorio **no contiene frontend web dedicado**.
+### 1. Claude Code (Recomendado)
+* **Cuenta Requerida:** Cuenta Claude Pro (suscripción de pago de Anthropic).
+* **API Key:** **NO requiere API Key** de desarrollador. Se vincula mediante el inicio de sesión OAuth estándar de tu navegador.
+* **Instalación / Versión:** Requiere el paquete oficial (última versión). Instálalo con: `npm install -g @anthropic-ai/claude-code`.
+* **Cómo conectarlo:** Abre una terminal, escribe el comando `claude` y presiona Enter. Se abrirá tu navegador para autorizar la conexión. Una vez hecho, nuestro panel web lo detectará y usará automáticamente.
 
-Interfaces de usuario reales:
-- Panel del addon en Blender (`BlenderMCP` en sidebar)
-- Cliente MCP externo (Claude Desktop/Code, Cursor, VS Code)
+### 2. OpenCode (Open Source)
+* **Cuenta Requerida:** Cuenta gratuita en OpenCode.ai (o vinculación con Github/Google).
+* **API Key:** **NO requiere API Key** en tu `.env`. Usa el token de sesión de la aplicación.
+* **Instalación / Versión:** Requiere el CLI oficial. Instálalo con: `npm install -g opencode-ai` o mediante `curl -fsSL https://opencode.ai/install | bash`.
+* **Cómo conectarlo:** Si usas la app de escritorio de OpenCode, tu sesión se comparte automáticamente con la consola (`opencode run`). El orquestador web se anclará a esta sesión.
 
-## Como conectar Blender
-1. Abre Blender con el addon habilitado.
-2. En la vista 3D, abre sidebar (tecla `N`) -> pestaña `BlenderMCP`.
-3. Verifica puerto (`9876` recomendado en implementacion principal).
-4. Click en **Connect to MCP server** (o equivalente segun version).
-5. Mantener Blender abierto mientras se usa MCP.
+### 3. Hermes (por Nous Research)
+* **Cuenta Requerida:** No exige cuenta propia rígida (el agente enruta internamente a LLMs gratuitos como Gemini).
+* **API Key:** **NO requiere API Key** manual.
+* **Instalación / Versión:** Se instala su binario directamente. En Linux/WSL/Mac: `curl -fsSL https://hermes-agent.nousresearch.com/install.sh | bash`.
+* **Cómo conectarlo:** El sistema se comunica ejecutando `hermes -z`. En entornos estrictos de Windows (como antivirus Norton) el agente usa sus propios certificados SSL locales (`ca-bundle.pem`) ya mapeados en la configuración.
 
-## Como configurar MCP
+> **💡 Nota sobre APIs externas en Blender:** Si decides usar extensiones internas de Blender (como la integración con Poly Haven, Sketchfab, Hyper3D o Hunyuan3D), **SÍ** necesitarás sus respectivas API Keys, las cuales se configuran en el archivo `.env` o en el panel `BlenderMCP` en Blender. Para mover y crear mallas (operaciones estándar del LLM), ninguna API key es necesaria.
 
-### Claude Desktop (flujo principal Python)
-Configura `claude_desktop_config.json`:
+---
 
-```json
-{
-  "mcpServers": {
-    "blender": {
-      "command": "uvx",
-      "args": ["blender-mcp"]
-    }
-  }
-}
-```
+## 🔄 Cómo replicar y arrancar el entorno desde cero
 
-### Claude Desktop (flujo Node simple local)
-```json
-{
-  "mcpServers": {
-    "blender": {
-      "command": "node",
-      "args": ["ABSOLUTE_PATH_A/server.mjs"]
-    }
-  }
-}
-```
+Si acabas de clonar el repositorio y quieres ponerlo a funcionar, sigue este orden exacto:
 
-### Cursor/VS Code
-Config equivalente MCP apuntando al servidor Python o Node.
+1. **Prepara las dependencias del sistema:** 
+   * **Node.js**: Instala la **versión 18.x o superior**.
+   * **Python**: Instala la **versión 3.10 o superior**.
+   * **Blender**: Instala la **versión 4.1 o superior** (comprobado en Blender 5.x).
+2. **Instala las dependencias del orquestador:** En la raíz del repositorio, ejecuta `npm install`. (Esto instalará Express 5.2, Three.js 0.185 y el SDK de MCP).
+3. **Instala tu agente de IA preferido:** Por ejemplo, instala `claude-code` de forma global (`npm i -g @anthropic-ai/claude-code`), ábrelo una vez en tu terminal escribiendo `claude` e inicia sesión.
+4. **Instala el Addon en Blender:** Abre Blender, ve a Preferencias > Add-ons > Instalar, selecciona `blender-mcp/addon.py` y actívalo.
+5. **¡Enciende el sistema!**
+   * **Paso A:** En la terminal (en la raíz de este proyecto), ejecuta `npm run web`. Deja esta terminal abierta de fondo.
+   * **Paso B:** En Blender (panel lateral pulsando `N` > BlenderMCP), asegúrate de que el puerto sea `9876` y presiona el botón **"Connect to MCP server"**.
+   * **Paso C:** Abre tu navegador en `http://localhost:3000`, selecciona tu motor en la esquina superior derecha y comienza a escribir instrucciones.
 
-## Como conectar Claude
-1. Configura el server MCP en Claude (Desktop o Code).
-2. Reinicia Claude si no detecta cambios.
-3. Abre Blender y conecta el addon.
-4. Verifica icono/herramientas MCP disponibles.
-5. Prueba comando simple: "obten informacion de la escena".
+## 📁 Estructura del Repositorio
 
-## Solucion de problemas
+- `/web/`: Contiene la lógica del frontend (HTML/JS/CSS) y el servidor Express (`server.mjs`).
+- `/blender-mcp/`: Contiene la lógica en Python, el código del addon (`addon.py`) y las integraciones del protocolo MCP.
+- `package.json`: Definición de dependencias de Node.js.
+- `ai-engines.json`: Configuración de las rutas y parámetros de los distintos LLMs integrados.
 
-### Error: no conecta con Blender
-- Verifica que Blender addon este activo y "conectado".
-- Revisa que `BLENDER_PORT` coincida con el puerto del addon.
-- Asegura que solo una implementacion MCP este corriendo a la vez.
+## 🔒 Privacidad y Seguridad
 
-### Error: timeout
-- Reduce el tamano/complejidad de la operacion.
-- Reintenta con pasos pequenos.
+Al utilizar este sistema de forma local:
+- Todos los scripts se ejecutan en tu entorno de Blender (`localhost`). 
+- No se envían datos confidenciales de la escena hacia servidores externos que no sean los propios LLMs que hayas autorizado a usar tu contexto mediante MCP.
+- Asegúrate de nunca subir a un repositorio público el archivo `.env` u otros archivos que contengan API Keys o rutas locales de tu máquina.
 
-### Error en servicios externos
-- Sketchfab/Hyper3D/Hunyuan3D requieren credenciales validas.
-- Revisa internet y credenciales en panel BlenderMCP.
+## 📄 Licencia
 
-### Error: MCP no aparece en cliente
-- Revisa JSON de configuracion MCP.
-- Reinicia cliente (Claude/Cursor/VS Code).
-- Confirma que el comando (`uvx`, `uv run`, `node`) exista en PATH.
-
-## Estado actual del proyecto (real del repo)
-
-### Lo que si esta implementado
-- Servidor MCP Python funcional (FastMCP) en `blender-mcp/src/blender_mcp/server.py`.
-- Addon Blender robusto en `blender-mcp/addon.py`.
-- Integraciones opcionales (Poly Haven, Sketchfab, Hyper3D, Hunyuan3D).
-- Servidor MCP Node simple en `server.mjs`.
-
-### Problemas detectados que bloquean o degradan ejecucion
-1. **Falta `requirements.txt`** en el workspace (aunque `pyproject.toml`/`uv.lock` existen).
-2. **`zod` no esta declarada** como dependencia directa en `package.json` pero se importa en `server.mjs`.
-3. **`config.json` tiene ruta hardcodeada** a otra maquina (`C:\\Users\\ESPE-SD\\...`).
-4. **Desalineacion de puertos** entre flujos (`9999` legacy vs `9876` principal).
-5. **`make_shrimp_detailed.py` contiene error de sintaxis** (tupla incompleta).
-6. **Modulo de configuracion de telemetria faltante**: `blender-mcp/src/blender_mcp/config.py` se referencia pero no existe en el repo.
-7. **Versiones inconsistentes**: `blender-mcp/src/blender_mcp/__init__.py` declara `0.1.0` mientras `pyproject.toml` declara `1.5.5`.
-8. **Metadata pendiente** en `pyproject.toml` (autor/URLs placeholder).
-
-## Componentes pendientes
-- Unificar y documentar oficialmente si el flujo soportado es Python, Node, o ambos.
-- Corregir dependencia Node faltante y rutas de configuracion local.
-- Resolver manejo de configuracion/secretos de telemetria (`config.py` ausente).
-- Agregar pruebas minimas de smoke/integracion.
-- Publicar guia unica de arranque para Windows/macOS/Linux alineada con este repo (no solo con upstream).
-
-## Roadmap sugerido
-1. **Estabilizacion de arranque**: rutas, puertos, dependencias, config.
-2. **Consolidacion de arquitectura**: elegir flujo principal y marcar el otro como legacy.
-3. **Hardening**: validaciones, timeouts, manejo de errores y seguridad en ejecucion de codigo.
-4. **DX**: scripts de setup automatizado, checks de entorno y troubleshooting guiado.
-5. **Calidad**: pruebas de conexion Blender<->MCP y CI basica.
-6. **Documentacion final**: guia de produccion y matriz de compatibilidad por plataforma.
-
-## Informacion faltante (explicita)
-- No hay documentacion local que defina claramente si el backend Node de raiz sigue oficialmente soportado.
-- No se incluye `requirements.txt`; la fuente de verdad Python parece ser `pyproject.toml` + `uv.lock`.
-- No se incluye `src/blender_mcp/config.py` (referenciado por telemetria), por lo que su formato esperado no esta documentado en este repo.
-- No hay frontend web en el repositorio; la UX depende de clientes MCP externos y del panel Blender.
+Este proyecto se distribuye bajo la licencia **MIT**. Siéntete libre de modificarlo, distribuirlo y usarlo en tus proyectos personales o de investigación.
